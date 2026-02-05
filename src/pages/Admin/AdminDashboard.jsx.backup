@@ -1,0 +1,539 @@
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Container, Typography, Grid, Paper, Box, Chip, Alert, Button, Avatar } from '@mui/material';
+import { Package, User, ShoppingBag, TrendingUp, Package as Inventory, Users as People, DollarSign as Money, Tag as LocalOffer, Clock as Pending } from 'lucide-react';
+import HeroIcon from '../../components/Common/HeroIcon';
+import { getAllOrders } from '../../services/orderService';
+import { getAllUsers } from '../../services/userService';
+import { getProducts } from '../../services/productService';
+import ProtectedRoute from '../../components/Common/ProtectedRoute';
+import { formatCurrency, formatDateTime, formatDate } from '../../utils/format';
+import { CircularProgress } from '@mui/material';
+
+const AdminDashboard = () => {
+  const navigate = useNavigate();
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    totalOrders: 0,
+    totalProducts: 0,
+    totalRevenue: 0,
+    pendingOrders: 0
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [orders, setOrders] = useState([]);
+  const [filteredOrders, setFilteredOrders] = useState([]);
+
+  useEffect(() => {
+    loadStats();
+    // Refresh stats every 30 seconds
+    const interval = setInterval(loadStats, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const loadStats = async () => {
+    setLoading(true);
+
+    try {
+      console.log('Loading admin dashboard stats...');
+      const [usersResult, ordersResult, productsResult] = await Promise.all([
+        getAllUsers(),
+        getAllOrders(),
+        getProducts(100) // Get more products for admin
+      ]);
+
+      console.log('Admin stats results:', {
+        users: usersResult,
+        orders: ordersResult,
+        products: productsResult
+      });
+
+      const users = usersResult.success ? usersResult.users : [];
+      const orders = ordersResult.success ? ordersResult.orders : [];
+      const products = productsResult.success ? (productsResult.products || []) : [];
+
+      // Set orders for dashboard boxes
+      setOrders(orders);
+      setFilteredOrders(orders);
+
+      console.log('Dashboard - Orders loaded:', orders.length);
+      console.log('Dashboard - Orders data:', orders);
+
+      console.log('Admin Dashboard Stats:', {
+        usersCount: users.length,
+        ordersCount: orders.length,
+        productsCount: products.length,
+        productsResult: productsResult
+      });
+
+      // If products result failed, log the error
+      if (!productsResult.success) {
+        console.error('Failed to load products:', productsResult.error);
+        setError(`Failed to load products: ${productsResult.error}`);
+      } else {
+        setError(null);
+      }
+
+      const totalRevenue = orders.reduce((sum, order) => {
+        return sum + (order.status === 'confirmed' ? (order.totalPrice || 0) : 0);
+      }, 0);
+
+      const pendingOrders = orders.filter(order => order.status === 'pending').length;
+
+      setStats({
+        totalUsers: users.length,
+        totalOrders: orders.length,
+        totalProducts: products.length,
+        totalRevenue,
+        pendingOrders
+      });
+    } catch (error) {
+      console.error('Error loading stats:', error);
+      setError(`Error loading dashboard: ${error.message}`);
+    }
+
+    setLoading(false);
+  };
+
+  const StatCard = ({ title, value, iconName, color = 'primary', trend, onClick }) => (
+    <Paper
+      elevation={0}
+      onClick={onClick}
+      sx={{
+        p: 3,
+        borderRadius: 1,
+        height: '100%',
+        bgcolor: 'background.paper',
+        border: '1px solid',
+        borderColor: 'divider',
+        transition: 'all 0.2s',
+        cursor: onClick ? 'pointer' : 'default',
+        '&:hover': {
+          borderColor: onClick ? 'primary.main' : 'divider',
+          transform: onClick ? 'translateY(-2px)' : 'none',
+        }
+      }}
+    >
+      <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 2 }}>
+        <Box
+          sx={{
+            width: 56,
+            height: 56,
+            borderRadius: 1,
+            bgcolor: `${color}.main`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+          }}
+        >
+          <HeroIcon name={iconName} size={28} sx={{ color: 'white', pointerEvents: 'none' }} />
+        </Box>
+        {trend && (
+          <Chip
+            icon={<HeroIcon name="trendingUp" size={16} />}
+            label={trend}
+            size="small"
+            sx={{
+              bgcolor: 'success.main',
+              color: 'white',
+              fontWeight: 500,
+              pointerEvents: 'none',
+            }}
+          />
+        )}
+      </Box>
+      <Typography variant="h4" fontWeight="bold" gutterBottom>
+        {loading ? '...' : value}
+      </Typography>
+      <Typography variant="body2" color="text.secondary" fontWeight="500">
+        {title}
+      </Typography>
+    </Paper>
+  );
+
+  const QuickActionCard = ({ title, iconName, color, path }) => (
+    <Paper
+      elevation={0}
+      onClick={() => navigate(path)}
+      sx={{
+        p: 3,
+        borderRadius: 1,
+        bgcolor: 'background.paper',
+        border: '1px solid',
+        borderColor: 'divider',
+        textAlign: 'center',
+        cursor: 'pointer',
+        transition: 'all 0.2s',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        '&:hover': {
+          borderColor: 'primary.main',
+          bgcolor: 'rgba(46, 75, 247, 0.02)',
+        },
+      }}
+    >
+      <Box
+        sx={{
+          width: 64,
+          height: 64,
+          borderRadius: 1,
+          bgcolor: `${color}.main`,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          mb: 2,
+        }}
+      >
+        <HeroIcon name={iconName} size={32} sx={{ color: 'white', pointerEvents: 'none' }} />
+      </Box>
+      <Typography variant="body1" fontWeight="600">
+        {title}
+      </Typography>
+    </Paper>
+  );
+
+  return (
+    <ProtectedRoute requireAdmin>
+      <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
+        <Container maxWidth="xl" sx={{ py: { xs: 2, sm: 3, md: 4 }, px: { xs: 1.5, sm: 2, md: 3 } }}>
+          {/* Header Section */}
+          <Box sx={{ mb: 4 }}>
+            <Typography variant="h4" fontWeight="bold" gutterBottom>
+              Dashboard Overview
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Monitor your store's performance and key metrics
+            </Typography>
+          </Box>
+
+          {error && (
+            <Alert
+              severity="error"
+              sx={{ mb: 3 }}
+              action={
+                <Button color="inherit" size="small" onClick={loadStats}>
+                  Retry
+                </Button>
+              }
+            >
+              {error}
+            </Alert>
+          )}
+
+          {loading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 8 }}>
+              <CircularProgress />
+            </Box>
+          ) : (
+            <>
+              {/* Stats Cards */}
+              <Grid container spacing={3} sx={{ mb: 4 }}>
+                <Grid item xs={12} sm={6} lg={3}>
+                  <StatCard
+                    title="Total Users"
+                    value={stats.totalUsers}
+                    iconName="people"
+                    color="primary"
+                    onClick={() => navigate('/admin/users')}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6} lg={3}>
+                  <StatCard
+                    title="Total Products"
+                    value={stats.totalProducts}
+                    iconName="inventory"
+                    color="info"
+                    onClick={() => navigate('/admin/products')}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6} lg={3}>
+                  <StatCard
+                    title="Total Orders"
+                    value={stats.totalOrders}
+                    iconName="shoppingBag"
+                    color="success"
+                    onClick={() => navigate('/admin/orders')}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6} lg={3}>
+                  <StatCard
+                    title="Total Revenue"
+                    value={formatCurrency(stats.totalRevenue)}
+                    iconName="money"
+                    color="warning"
+                    trend="Active"
+                  />
+                </Grid>
+              </Grid>
+
+              {/* Dashboard Boxes */}
+              <Box sx={{ mb: 4 }}>
+                <Typography variant="h6" fontWeight="600" sx={{ mb: 2, color: '#1f2937' }}>
+                  Recent Activity
+                </Typography>
+                <Grid container spacing={3}>
+                  {/* Recent Orders Box */}
+                  <Grid item xs={12} md={6}>
+                    <Paper sx={{
+                      p: 3,
+                      bgcolor: 'white',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: 3,
+                      minHeight: 400,
+                      display: 'flex',
+                      flexDirection: 'column'
+                    }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+                        <Avatar sx={{ bgcolor: '#6366f1', width: 40, height: 40 }}>
+                          <Package size={20} />
+                        </Avatar>
+                        <Box>
+                          <Typography variant="h6" fontWeight="600" color="#1f2937">
+                            Recent Orders
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            Latest 5 orders
+                          </Typography>
+                        </Box>
+                      </Box>
+
+                      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                        {filteredOrders.length === 0 ? (
+                          <Box sx={{ textAlign: 'center', py: 3, flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+                            <Package size={32} sx={{ color: '#9ca3af', mb: 1 }} />
+                            <Typography variant="body2" color="text.secondary">
+                              No orders yet
+                            </Typography>
+                          </Box>
+                        ) : (
+                          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, overflow: 'auto' }}>
+                            {filteredOrders.slice(0, 5).map((order) => (
+                              <Box key={order.id} sx={{
+                                p: 2,
+                                bgcolor: '#f8fafc',
+                                borderRadius: 2,
+                                border: '1px solid #e5e7eb',
+                                transition: 'all 0.2s ease',
+                                '&:hover': { bgcolor: '#f1f5f9' }
+                              }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 1 }}>
+                                  <Box>
+                                    <Typography variant="body2" fontWeight="600" sx={{ fontFamily: 'monospace', color: '#1f2937' }}>
+                                      #{order.id ? order.id.substring(0, 8).toUpperCase() : 'UNKNOWN'}
+                                    </Typography>
+                                    <Typography variant="caption" color="text.secondary">
+                                      {order.userName || 'Unknown Customer'}
+                                    </Typography>
+                                  </Box>
+                                  <Chip
+                                    label={(order.status || 'pending').toUpperCase()}
+                                    size="small"
+                                    sx={{
+                                      bgcolor: order.status === 'delivered' ? '#10b981' :
+                                        order.status === 'confirmed' ? '#3b82f6' :
+                                          order.status === 'processing' ? '#8b5cf6' :
+                                            order.status === 'shipped' ? '#06b6d4' :
+                                              order.status === 'cancelled' ? '#ef4444' :
+                                                order.status === 'refunded' ? '#6b7280' : '#f59e0b',
+                                      color: 'white',
+                                      fontWeight: 600,
+                                      fontSize: '0.7rem'
+                                    }}
+                                  />
+                                </Box>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                  <Typography variant="caption" color="text.secondary">
+                                    {formatDateTime(order.createdAt)}
+                                  </Typography>
+                                  <Typography variant="body2" fontWeight="600" color="#6366f1">
+                                    {formatCurrency(order.totalPrice || 0)}
+                                  </Typography>
+                                </Box>
+                              </Box>
+                            ))}
+                          </Box>
+                        )}
+                      </Box>
+                    </Paper>
+                  </Grid>
+
+                  {/* Recent Users Box */}
+                  <Grid item xs={12} md={6}>
+                    <Paper sx={{
+                      p: 3,
+                      bgcolor: 'white',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: 3,
+                      minHeight: 400,
+                      display: 'flex',
+                      flexDirection: 'column'
+                    }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+                        <Avatar sx={{ bgcolor: '#10b981', width: 40, height: 40 }}>
+                          <User size={20} />
+                        </Avatar>
+                        <Box>
+                          <Typography variant="h6" fontWeight="600" color="#1f2937">
+                            Recent Customers
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            Latest 5 customers
+                          </Typography>
+                        </Box>
+                      </Box>
+
+                      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                        {filteredOrders.length === 0 ? (
+                          <Box sx={{ textAlign: 'center', py: 3, flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+                            <User size={32} sx={{ color: '#9ca3af', mb: 1 }} />
+                            <Typography variant="body2" color="text.secondary">
+                              No customers yet
+                            </Typography>
+                          </Box>
+                        ) : (
+                          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, overflow: 'auto' }}>
+                            {(() => {
+                              const uniqueCustomers = [];
+                              const seenEmails = new Set();
+
+                              filteredOrders.slice(0, 10).forEach(order => {
+                                if (order.userEmail && !seenEmails.has(order.userEmail)) {
+                                  seenEmails.add(order.userEmail);
+                                  uniqueCustomers.push(order);
+                                }
+                              });
+
+                              return uniqueCustomers.slice(0, 5).map((order, index) => (
+                                <Box key={order.userEmail || index} sx={{
+                                  p: 2,
+                                  bgcolor: '#f8fafc',
+                                  borderRadius: 2,
+                                  border: '1px solid #e5e7eb',
+                                  transition: 'all 0.2s ease',
+                                  '&:hover': { bgcolor: '#f1f5f9' }
+                                }}>
+                                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 1 }}>
+                                    <Box>
+                                      <Typography variant="body2" fontWeight="600" color="#1f2937">
+                                        {order.userName || 'Unknown Customer'}
+                                      </Typography>
+                                      <Typography variant="caption" color="text.secondary">
+                                        {order.userEmail || 'No email'}
+                                      </Typography>
+                                    </Box>
+                                    <Typography variant="caption" color="text.secondary">
+                                      {order.userPhone || 'No phone'}
+                                    </Typography>
+                                  </Box>
+                                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <Typography variant="caption" color="text.secondary">
+                                      {formatDateTime(order.createdAt)}
+                                    </Typography>
+                                    <Typography variant="body2" fontWeight="600" color="#6366f1">
+                                      {formatCurrency(order.totalPrice || 0)}
+                                    </Typography>
+                                  </Box>
+                                </Box>
+                              ));
+                            })()}
+                          </Box>
+                        </Box>
+                      </Box>
+                    </Paper>
+                  </Grid>
+                </Grid>
+              </Box>
+
+              {/* Secondary Stats */}
+              <Grid container spacing={3} sx={{ mb: 4 }}>
+                <Grid item xs={12} sm={6} md={4}>
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      p: 3,
+                      borderRadius: 1,
+                      bgcolor: 'background.paper',
+                      border: '1px solid',
+                      borderColor: 'divider',
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                      <Box
+                        sx={{
+                          width: 48,
+                          height: 48,
+                          borderRadius: 1,
+                          bgcolor: 'warning.main',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <HeroIcon name="pending" size={24} sx={{ color: 'white', pointerEvents: 'none' }} />
+                      </Box>
+                      <Box>
+                        <Typography variant="h5" fontWeight="bold">
+                          {stats.pendingOrders}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Pending Orders
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </Paper>
+                </Grid>
+              </Grid>
+
+              {/* Quick Actions */}
+              <Box>
+                <Typography variant="h6" fontWeight="600" sx={{ mb: 2 }}>
+                  Quick Actions
+                </Typography>
+                <Grid container spacing={2}>
+                  <Grid item xs={6} sm={4} md={3}>
+                    <QuickActionCard
+                      title="Manage Products"
+                      iconName="inventory"
+                      color="primary"
+                      path="/admin/products"
+                    />
+                  </Grid>
+                  <Grid item xs={6} sm={4} md={3}>
+                    <QuickActionCard
+                      title="Categories"
+                      iconName="localOffer"
+                      color="secondary"
+                      path="/admin/categories"
+                    />
+                  </Grid>
+                  <Grid item xs={6} sm={4} md={3}>
+                    <QuickActionCard
+                      title="View Orders"
+                      iconName="shoppingBag"
+                      color="success"
+                      path="/admin/orders"
+                    />
+                  </Grid>
+                  <Grid item xs={6} sm={4} md={3}>
+                    <QuickActionCard
+                      title="Manage Users"
+                      iconName="people"
+                      color="info"
+                      path="/admin/users"
+                    />
+                  </Grid>
+                </Grid>
+              </Box>
+            </>
+          )}
+        </Container>
+      </Box>
+    </ProtectedRoute>
+  );
+};
+
+export default AdminDashboard;
