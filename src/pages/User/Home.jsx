@@ -6,19 +6,19 @@ import BlinkitProductCard from '../../components/Product/BlinkitProductCard';
 import ProductSkeleton from '../../components/Product/ProductSkeleton';
 import HeroBanner from '../../components/Promotional/HeroBanner';
 import PopularCategories from '../../components/Category/PopularCategories';
-import LoginModal from '../../components/Auth/LoginModal';
 import HeroIcon from '../../components/Common/HeroIcon';
 import { getProducts, getOfferProducts } from '../../services/productService';
 import { PAGINATION_SIZE } from '../../utils/constants';
+import { formatCurrency } from '../../utils/format';
 
 const Home = () => {
+  const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const [products, setProducts] = useState([]);
   const [offers, setOffers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [filteredProducts, setFilteredProducts] = useState([]);
-  const [loginModalOpen, setLoginModalOpen] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -132,23 +132,121 @@ const Home = () => {
     );
   }
 
+  // Products to show as floating cards (offers first, then products)
+  const landingProducts = (offers.length > 0 ? offers : products).slice(0, 5);
+
   // Guest landing – app-like CTA
   return (
-    <>
-      <Box
-        sx={{
-          minHeight: '100vh',
-          width: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          px: 2,
-          py: 4,
-          background: 'linear-gradient(180deg, #2e4bf7 0%, #1e3aaf 100%)',
-        }}
-      >
-        <Box sx={{ textAlign: 'center', maxWidth: 360 }}>
+    <Box
+      sx={{
+        minHeight: '100vh',
+        width: '100%',
+        position: 'relative',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        px: 2,
+        py: 4,
+        background: 'linear-gradient(180deg, #2e4bf7 0%, #1e3aaf 100%)',
+        overflow: 'hidden',
+      }}
+    >
+      {/* Floating product cards */}
+      {landingProducts.length > 0 &&
+        landingProducts.map((product, index) => {
+          const positions = [
+            { top: '12%', left: '6%' },
+            { top: '18%', right: '4%' },
+            { bottom: '10%', left: '8%' },
+            { bottom: '10%', right: '6%' },
+            { top: '48%', left: '2%' },
+          ];
+          const pos = positions[index] || positions[0];
+          const delay = index * 0.2;
+          return (
+            <Box
+              key={product.id}
+              onClick={() => navigate(`/product/${product.id}`)}
+              sx={{
+                position: 'absolute',
+                ...pos,
+                width: 88,
+                cursor: 'pointer',
+                zIndex: 0,
+                '@keyframes float': {
+                  '0%, 100%': { transform: 'translateY(0)' },
+                  '50%': { transform: 'translateY(-8px)' },
+                },
+                animation: `float 4s ease-in-out ${delay}s infinite`,
+                display: { xs: index < 3 ? 'block' : 'none', sm: 'block' },
+              }}
+            >
+              <Box
+                sx={{
+                  bgcolor: 'white',
+                  borderRadius: 2,
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                  overflow: 'hidden',
+                  border: '1px solid rgba(255,255,255,0.3)',
+                  transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                  '&:hover': {
+                    transform: 'scale(1.05)',
+                    boxShadow: '0 12px 32px rgba(0,0,0,0.18)',
+                  },
+                }}
+              >
+                <Box
+                  sx={{
+                    width: '100%',
+                    paddingTop: '100%',
+                    position: 'relative',
+                    bgcolor: '#f5f5f5',
+                  }}
+                >
+                  <Box
+                    component="img"
+                    src={product.imageUrl || '/placeholder.svg'}
+                    alt={product.name}
+                    sx={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'contain',
+                      p: 0.5,
+                    }}
+                  />
+                </Box>
+                <Box sx={{ p: 0.75 }}>
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      fontWeight: 600,
+                      color: '#1a1a1a',
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden',
+                      lineHeight: 1.2,
+                      fontSize: '0.7rem',
+                    }}
+                  >
+                    {product.name}
+                  </Typography>
+                  <Typography variant="caption" sx={{ fontWeight: 700, color: 'primary.main', fontSize: '0.7rem' }}>
+                    {product.offerPrice != null && product.offerPrice !== '' && Number(product.offerPrice) > 0
+                      ? formatCurrency(product.offerPrice)
+                      : formatCurrency(product.price)}
+                  </Typography>
+                </Box>
+              </Box>
+            </Box>
+          );
+        })}
+
+      <Box sx={{ textAlign: 'center', maxWidth: 360, position: 'relative', zIndex: 1 }}>
           <Box
             component="img"
             src="/assets/secondarylogo.png"
@@ -177,7 +275,7 @@ const Home = () => {
             variant="contained"
             size="large"
             fullWidth
-            onClick={() => setLoginModalOpen(true)}
+            onClick={() => navigate('/signup')}
             sx={{
               bgcolor: 'white',
               color: 'primary.main',
@@ -197,8 +295,6 @@ const Home = () => {
           </Typography>
         </Box>
       </Box>
-      <LoginModal open={loginModalOpen} onClose={() => setLoginModalOpen(false)} />
-    </>
   );
 };
 
