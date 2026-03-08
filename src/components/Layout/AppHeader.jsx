@@ -508,7 +508,12 @@ const AppHeader = () => {
                         return (
                           <Box
                             key={product.id}
-                            onClick={() => handleSelectProduct(product.id)}
+                            onPointerDown={(e) => {
+                              // Fix: use onPointerDown + preventDefault so navigation fires
+                              // before ClickAwayListener closes the portal-rendered Popper on mobile.
+                              e.preventDefault();
+                              handleSelectProduct(product.id);
+                            }}
                             sx={{
                               display: 'flex',
                               alignItems: 'center',

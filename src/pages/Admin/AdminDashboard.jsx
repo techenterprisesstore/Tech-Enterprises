@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Container, Typography, Grid, Paper, Box, Chip, Alert, Button, Avatar } from '@mui/material';
-import { Package, User } from 'lucide-react';
+import { Package, User, UserCheckIcon } from 'lucide-react';
 import HeroIcon from '../../components/Common/HeroIcon';
 import { getAllOrders } from '../../services/orderService';
 import { getAllUsers } from '../../services/userService';
@@ -157,43 +157,43 @@ const AdminDashboard = () => {
                       </Box>
                     </Box>
                     <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
-                    {recentOrders.length === 0 ? (
-                      <Typography variant="body2" color="text.secondary" sx={{ py: 3, textAlign: 'center' }}>No orders yet</Typography>
-                    ) : (
-                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-                        {recentOrders.map((order) => (
-                          <Box
-                            key={order.id}
-                            onClick={() => navigate('/admin/orders')}
-                            sx={{
-                              p: 1.5,
-                              borderRadius: 1.5,
-                              border: '1px solid',
-                              borderColor: 'divider',
-                              bgcolor: '#fafafa',
-                              cursor: 'pointer',
-                              '&:hover': { bgcolor: '#f5f5f5' },
-                            }}
-                          >
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                              <Typography variant="body2" fontWeight={600}>#{order.id?.slice(0, 8).toUpperCase() || '—'}</Typography>
-                              <Chip label={(order.status || 'pending').toUpperCase()} size="small" sx={{ bgcolor: statusColor(order.status), color: 'white', fontSize: '0.65rem', height: 20 }} />
-                            </Box>
-                            <Typography variant="caption" color="text.secondary" display="block">{order.shippingAddress?.name || order.userName}</Typography>
-                            {order.items?.length > 0 && (
-                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
-                                <Box component="img" src={getOrderItemImage(order.items[0])} alt="" onError={(e) => { e.target.src = '/placeholder.svg'; }} sx={{ width: 32, height: 32, borderRadius: 1, objectFit: 'cover', bgcolor: '#eee' }} />
-                                <Typography variant="caption" noWrap sx={{ flex: 1 }}>{order.items[0].name || order.items[0].product?.name || 'Item'}</Typography>
+                      {recentOrders.length === 0 ? (
+                        <Typography variant="body2" color="text.secondary" sx={{ py: 3, textAlign: 'center' }}>No orders yet</Typography>
+                      ) : (
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                          {recentOrders.map((order) => (
+                            <Box
+                              key={order.id}
+                              onClick={() => navigate('/admin/orders')}
+                              sx={{
+                                p: 1.5,
+                                borderRadius: 1.5,
+                                border: '1px solid',
+                                borderColor: 'divider',
+                                bgcolor: '#fafafa',
+                                cursor: 'pointer',
+                                '&:hover': { bgcolor: '#f5f5f5' },
+                              }}
+                            >
+                              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                                <Typography variant="body2" fontWeight={600}>#{order.id?.slice(0, 8).toUpperCase() || '—'}</Typography>
+                                <Chip label={(order.status || 'pending').toUpperCase()} size="small" sx={{ bgcolor: statusColor(order.status), color: 'white', fontSize: '0.65rem', height: 20 }} />
                               </Box>
-                            )}
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1, pt: 1, borderTop: '1px solid', borderColor: 'divider' }}>
-                              <Typography variant="caption" color="text.secondary">{formatDateTime(order.createdAt)}</Typography>
-                              <Typography variant="body2" fontWeight={600}>{formatCurrency(order.totalPrice || 0)}</Typography>
+                              <Typography variant="caption" color="text.secondary" display="block">{order.shippingAddress?.name || order.userName}</Typography>
+                              {order.items?.length > 0 && (
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
+                                  <Box component="img" src={getOrderItemImage(order.items[0])} alt="" onError={(e) => { e.target.src = '/placeholder.svg'; }} sx={{ width: 32, height: 32, borderRadius: 1, objectFit: 'cover', bgcolor: '#eee' }} />
+                                  <Typography variant="caption" noWrap sx={{ flex: 1 }}>{order.items[0].name || order.items[0].product?.name || 'Item'}</Typography>
+                                </Box>
+                              )}
+                              <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1, pt: 1, borderTop: '1px solid', borderColor: 'divider' }}>
+                                <Typography variant="caption" color="text.secondary">{formatDateTime(order.createdAt)}</Typography>
+                                <Typography variant="body2" fontWeight={600}>{formatCurrency(order.totalPrice || 0)}</Typography>
+                              </Box>
                             </Box>
-                          </Box>
-                        ))}
-                      </Box>
-                    )}
+                          ))}
+                        </Box>
+                      )}
                     </Box>
                   </Paper>
                 </Grid>
@@ -207,21 +207,21 @@ const AdminDashboard = () => {
                       </Box>
                     </Box>
                     <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
-                    {recentCustomers.length === 0 ? (
-                      <Typography variant="body2" color="text.secondary" sx={{ py: 3, textAlign: 'center' }}>No customers yet</Typography>
-                    ) : (
-                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                        {recentCustomers.map((c, i) => (
-                          <Box key={c.userEmail || i} sx={{ p: 1.5, borderRadius: 1.5, border: '1px solid', borderColor: 'divider', bgcolor: '#fafafa' }}>
-                            <Typography variant="body2" fontWeight={600}>{c.userName || '—'}</Typography>
-                            <Typography variant="caption" color="text.secondary" display="block">{c.userEmail}</Typography>
-                            {c.createdAt && (
-                              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.25 }}>Joined {formatDate(c.createdAt)}</Typography>
-                            )}
-                          </Box>
-                        ))}
-                      </Box>
-                    )}
+                      {recentCustomers.length === 0 ? (
+                        <Typography variant="body2" color="text.secondary" sx={{ py: 3, textAlign: 'center' }}>No customers yet</Typography>
+                      ) : (
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                          {recentCustomers.map((c, i) => (
+                            <Box key={c.userEmail || i} sx={{ p: 1.5, borderRadius: 1.5, border: '1px solid', borderColor: 'divider', bgcolor: '#fafafa', display: 'flex', alignItems: 'center', gap: 2 }}>
+                              <UserCheckIcon sx={{ width: 20, height: 20 }}></UserCheckIcon><Typography variant="body2" fontWeight={600}>{c.userName || '—'}</Typography>
+                              <Typography variant="caption" color="text.secondary" display="block">{c.userEmail}</Typography>
+                              {c.createdAt && (
+                                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.25 }}>Joined {formatDate(c.createdAt)}</Typography>
+                              )}
+                            </Box>
+                          ))}
+                        </Box>
+                      )}
                     </Box>
                   </Paper>
                 </Grid>
