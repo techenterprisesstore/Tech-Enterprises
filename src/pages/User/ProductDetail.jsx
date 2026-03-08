@@ -119,13 +119,13 @@ const ProductDetail = () => {
       setLoading(false);
       return;
     }
-    
+
     setLoading(true);
     setError('');
-    
+
     try {
       const result = await getProductById(id);
-      
+
       if (result.success && result.product) {
         setProduct(result.product);
         // Load related products after product is loaded
@@ -146,7 +146,7 @@ const ProductDetail = () => {
     if (authLoading) {
       return;
     }
-    
+
     if (!user) {
       navigate('/login');
       return;
@@ -179,14 +179,14 @@ const ProductDetail = () => {
     };
 
     const success = await addToCart(cartItem, quantity);
-    
+
     if (success) {
       // Navigate to checkout
       navigate('/checkout');
     } else {
       setError('Failed to add item to cart');
     }
-    
+
     setProcessing(false);
   };
 
@@ -225,9 +225,9 @@ const ProductDetail = () => {
       return;
     }
     setIsWishlisted(!isWishlisted);
-    setSnackbar({ 
-      open: true, 
-      message: isWishlisted ? 'Removed from wishlist' : 'Added to wishlist' 
+    setSnackbar({
+      open: true,
+      message: isWishlisted ? 'Removed from wishlist' : 'Added to wishlist'
     });
   };
 
@@ -249,7 +249,7 @@ const ProductDetail = () => {
       navigate('/login');
       return;
     }
-    
+
     if (!product || product.stock === 0) {
       setSnackbar({ open: true, message: 'Product is out of stock', severity: 'error' });
       return;
@@ -312,7 +312,7 @@ const ProductDetail = () => {
   const totalReviews = hasRealReviews ? product.totalReviews : 0;
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: '#fafafa' }}>
+    <Box sx={{ minHeight: '100vh', bgcolor: '#fafafa', overflowX: 'hidden' }}>
       <Container maxWidth="lg" sx={{ px: { xs: 1.5, sm: 2 }, py: 2 }}>
         <Breadcrumbs separator={<ChevronRight size={14} />} sx={{ mb: 2, '& .MuiBreadcrumbs-separator': { color: 'text.secondary' } }}>
           <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>
@@ -368,7 +368,7 @@ const ProductDetail = () => {
                         }}
                         onError={(e) => { e.target.src = '/placeholder.svg'; }}
                       />
-                      
+
                       {/* Image Navigation */}
                       {images.length > 1 && (
                         <>
@@ -404,14 +404,14 @@ const ProductDetail = () => {
                   );
                 })()}
               </Box>
-              
+
               {/* Thumbnail Gallery */}
               {(() => {
                 const images = (product.galleryImages && product.galleryImages.length > 0)
                   ? product.galleryImages
                   : (product.imageUrl ? [product.imageUrl] : []);
                 if (images.length <= 1) return null;
-                
+
                 return (
                   <Box sx={{ p: 2, display: 'flex', gap: 1, overflowX: 'auto' }}>
                     {images.map((img, index) => (
@@ -447,7 +447,7 @@ const ProductDetail = () => {
                 );
               })()}
             </Paper>
-            
+
             <Paper elevation={0} sx={{ p: 1.5, borderRadius: 2, bgcolor: 'white', mt: 2, border: '1px solid', borderColor: 'divider' }}>
               <Box
                 sx={{
@@ -569,375 +569,383 @@ const ProductDetail = () => {
           {/* Right column – scrollable on desktop */}
           <Grid item xs={12} md={6}>
             <Box sx={{ maxHeight: { md: 'calc(100vh - 120px)' }, overflowY: { md: 'auto' }, pr: { md: 0.5 } }}>
-            <Paper elevation={0} sx={{ p: 3, borderRadius: 2, bgcolor: 'white', mb: 2, border: '1px solid', borderColor: 'divider' }}>
-              <Typography variant="h5" fontWeight={600} gutterBottom sx={{ color: 'text.primary' }}>
-                {product.name}
-              </Typography>
-
-              {/* Rating and Reviews – only when real reviews exist; click scrolls to review section */}
-              {hasRealReviews && (
-                <Box
-                  onClick={() => document.getElementById('product-reviews')?.scrollIntoView({ behavior: 'smooth' })}
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 2,
-                    mb: 3,
-                    cursor: 'pointer',
-                    '&:hover': { opacity: 0.85 },
-                  }}
-                >
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Rating
-                      value={averageRating}
-                      readOnly
-                      precision={0.1}
-                      sx={{
-                        '& .MuiRating-iconFilled': {
-                          color: '#ffc107',
-                        },
-                      }}
-                    />
-                    <Typography variant="body2" sx={{ color: '#666' }}>
-                      {averageRating.toFixed(1)}
-                    </Typography>
-                  </Box>
-                  <Typography variant="body2" sx={{ color: '#999' }}>
-                    ({totalReviews} reviews)
-                  </Typography>
-                </Box>
-              )}
-
-              {/* Price */}
-              <Box sx={{ mb: 3 }}>
-                {hasOffer ? (
-                  <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 2 }}>
-                    <Typography
-                      variant="h3"
-                      sx={{
-                        fontWeight: 700,
-                        color: 'primary.main',
-                      }}
-                    >
-                      {formatCurrency(product.offerPrice)}
-                    </Typography>
-                    <Typography
-                      variant="h6"
-                      sx={{
-                        textDecoration: 'line-through',
-                        color: '#999',
-                        fontWeight: 400,
-                      }}
-                    >
-                      {formatCurrency(product.price)}
-                    </Typography>
-                    <Chip
-                      label={`${Math.round(((product.price - product.offerPrice) / product.price) * 100)}% OFF`}
-                      color="error"
-                      size="small"
-                      sx={{ fontWeight: 600 }}
-                    />
-                  </Box>
-                ) : (
-                  <Typography variant="h3" fontWeight={700} sx={{ color: 'primary.main' }}>
-                    {formatCurrency(product.price)}
-                  </Typography>
-                )}
-              </Box>
-
-              {/* Stock Status */}
-              <Box sx={{ mb: 3 }}>
-                <Chip
-                  label={product.stock > 0 ? `In Stock (${product.stock} available)` : 'Out of Stock'}
-                  color={product.stock > 0 ? 'success' : 'error'}
-                  variant="outlined"
-                  size="small"
-                  sx={{ fontWeight: 600 }}
-                />
-              </Box>
-
-              <Box sx={{ mb: 3 }}>
-                <Typography variant="subtitle2" fontWeight={600} gutterBottom sx={{ color: 'text.secondary' }}>
-                  Quantity
+              <Paper elevation={0} sx={{ p: 3, borderRadius: 2, bgcolor: 'white', mb: 2, border: '1px solid', borderColor: 'divider' }}>
+                <Typography variant="h5" fontWeight={600} gutterBottom sx={{ color: 'text.primary' }}>
+                  {product.name}
                 </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                  <IconButton
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    size="small"
+
+                {/* Rating and Reviews – only when real reviews exist; click scrolls to review section */}
+                {hasRealReviews && (
+                  <Box
+                    onClick={() => document.getElementById('product-reviews')?.scrollIntoView({ behavior: 'smooth' })}
                     sx={{
-                      border: '1px solid',
-                      borderColor: 'divider',
-                      borderRadius: 1.5,
-                      transition: 'all 0.3s ease',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 2,
+                      mb: 3,
+                      cursor: 'pointer',
+                      '&:hover': { opacity: 0.85 },
                     }}
                   >
-                    <Minus size={18} />
-                  </IconButton>
-                  <TextField
-                    type="number"
-                    value={quantity}
-                    onChange={(e) => {
-                      const val = Math.max(1, Math.min(product.stock, parseInt(e.target.value) || 1));
-                      setQuantity(val);
-                    }}
-                    inputProps={{ min: 1, max: product.stock }}
-                    sx={{
-                      width: 80,
-                      '& .MuiOutlinedInput-root': {
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Rating
+                        value={averageRating}
+                        readOnly
+                        precision={0.1}
+                        sx={{
+                          '& .MuiRating-iconFilled': {
+                            color: '#ffc107',
+                          },
+                        }}
+                      />
+                      <Typography variant="body2" sx={{ color: '#666' }}>
+                        {averageRating.toFixed(1)}
+                      </Typography>
+                    </Box>
+                    <Typography variant="body2" sx={{ color: '#999' }}>
+                      ({totalReviews} reviews)
+                    </Typography>
+                  </Box>
+                )}
+
+                {/* Price */}
+                <Box sx={{ mb: 3 }}>
+                  {hasOffer ? (
+                    <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 2 }}>
+                      <Typography
+                        variant="h3"
+                        sx={{
+                          fontWeight: 700,
+                          color: 'primary.main',
+                        }}
+                      >
+                        {formatCurrency(product.offerPrice)}
+                      </Typography>
+                      <Typography
+                        variant="h6"
+                        sx={{
+                          textDecoration: 'line-through',
+                          color: '#999',
+                          fontWeight: 400,
+                        }}
+                      >
+                        {formatCurrency(product.price)}
+                      </Typography>
+                      <Chip
+                        label={`${Math.round(((product.price - product.offerPrice) / product.price) * 100)}% OFF`}
+                        color="error"
+                        size="small"
+                        sx={{ fontWeight: 600 }}
+                      />
+                    </Box>
+                  ) : (
+                    <Typography variant="h3" fontWeight={700} sx={{ color: 'primary.main' }}>
+                      {formatCurrency(product.price)}
+                    </Typography>
+                  )}
+                </Box>
+
+                {/* Stock Status */}
+                <Box sx={{ mb: 3 }}>
+                  <Chip
+                    label={product.stock > 0 ? `In Stock (${product.stock} available)` : 'Out of Stock'}
+                    color={product.stock > 0 ? 'success' : 'error'}
+                    variant="outlined"
+                    size="small"
+                    sx={{ fontWeight: 600 }}
+                  />
+                </Box>
+
+                <Box sx={{ mb: 3 }}>
+                  <Typography variant="subtitle2" fontWeight={600} gutterBottom sx={{ color: 'text.secondary' }}>
+                    Quantity
+                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                    <IconButton
+                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                      size="small"
+                      sx={{
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        borderRadius: 1.5,
+                        transition: 'all 0.3s ease',
+                      }}
+                    >
+                      <Minus size={18} />
+                    </IconButton>
+                    <TextField
+                      type="number"
+                      value={quantity}
+                      onChange={(e) => {
+                        const val = Math.max(1, Math.min(product.stock, parseInt(e.target.value) || 1));
+                        setQuantity(val);
+                      }}
+                      inputProps={{ min: 1, max: product.stock }}
+                      sx={{
+                        width: 80,
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: 2,
+                          textAlign: 'center',
+                          fontWeight: 600,
+                          '&:hover fieldset': {
+                            borderColor: 'primary.main',
+                          },
+                          '&.Mui-focused fieldset': {
+                            borderColor: 'primary.main',
+                          },
+                        },
+                      }}
+                    />
+                    <IconButton
+                      onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
+                      disabled={quantity >= product.stock}
+                      sx={{
+                        border: '2px solid',
+                        borderColor: 'primary.main',
                         borderRadius: 2,
-                        textAlign: 'center',
-                        fontWeight: 600,
-                        '&:hover fieldset': {
-                          borderColor: 'primary.main',
+                        color: 'primary.main',
+                        bgcolor: 'rgba(46, 75, 247, 0.1)',
+                        '&:hover': {
+                          borderColor: 'primary.dark',
+                          bgcolor: 'rgba(46, 75, 247, 0.2)',
                         },
-                        '&.Mui-focused fieldset': {
-                          borderColor: 'primary.main',
+                        '&:disabled': {
+                          border: '2px solid #e0e0e0',
+                          color: '#999',
+                          bgcolor: 'transparent',
                         },
+                        transition: 'all 0.3s ease',
+                      }}
+                    >
+                      <Plus size={18} />
+                    </IconButton>
+                  </Box>
+                </Box>
+
+                {error && (
+                  <Alert severity="error" sx={{ mb: 2 }}>
+                    {error}
+                  </Alert>
+                )}
+              </Paper>
+
+
+              {/* Delivery Info */}
+              <Paper
+                elevation={4}
+                sx={{
+                  p: 3,
+                  borderRadius: 3,
+                  bgcolor: 'white',
+                  mb: 3,
+                  border: '1px solid rgba(102, 126, 234, 0.1)',
+                }}
+              >
+                <Typography variant="h6" fontWeight={600} gutterBottom sx={{ color: '#1a1a1a' }}>
+                  Why Shop With Us?
+                </Typography>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2.5 }}>
+                    <Box sx={{
+                      p: 1.5,
+                      borderRadius: 2,
+                      bgcolor: 'rgba(46, 75, 247, 0.15)',
+                      color: 'primary.main',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}>
+                      <Truck size={24} />
+                    </Box>
+                    <Box>
+                      <Typography variant="body1" fontWeight={600} sx={{ color: '#1a1a1a' }}>
+                        Free Delivery
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        On orders above $50 • Fast shipping
+                      </Typography>
+                    </Box>
+                  </Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2.5 }}>
+                    <Box sx={{
+                      p: 1.5,
+                      borderRadius: 2,
+                      bgcolor: 'rgba(46, 75, 247, 0.15)',
+                      color: 'primary.main',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}>
+                      <Shield size={24} />
+                    </Box>
+                    <Box>
+                      <Typography variant="body1" fontWeight={600} sx={{ color: '#1a1a1a' }}>
+                        100% Secure Payment
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        SSL encrypted • Safe transactions
+                      </Typography>
+                    </Box>
+                  </Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2.5 }}>
+                    <Box sx={{
+                      p: 1.5,
+                      borderRadius: 2,
+                      bgcolor: 'rgba(46, 75, 247, 0.15)',
+                      color: 'primary.main',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}>
+                      <RefreshCw size={24} />
+                    </Box>
+                    <Box>
+                      <Typography variant="body1" fontWeight={600} sx={{ color: '#1a1a1a' }}>
+                        30 Days Return
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Easy returns • Full refund
+                      </Typography>
+                    </Box>
+                  </Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2.5 }}>
+                    <Box sx={{
+                      p: 1.5,
+                      borderRadius: 2,
+                      bgcolor: 'rgba(46, 75, 247, 0.15)',
+                      color: 'primary.main',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}>
+                      <Star size={24} />
+                    </Box>
+                    <Box>
+                      <Typography variant="body1" fontWeight={600} sx={{ color: '#1a1a1a' }}>
+                        Best Quality
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Premium products • Quality assured
+                      </Typography>
+                    </Box>
+                  </Box>
+                </Box>
+              </Paper>
+
+              {/* About this item – product description (after Why Shop With Us?) */}
+              {product.description && (
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 3,
+                    borderRadius: 2,
+                    bgcolor: 'white',
+                    mb: 3,
+                    border: '1px solid',
+                    borderColor: 'divider',
+                  }}
+                >
+                  <Typography variant="h6" fontWeight={600} gutterBottom sx={{ color: 'text.primary', fontSize: '1.125rem' }}>
+                    About this item
+                  </Typography>
+                  <Box
+                    sx={{
+                      fontSize: '1rem',
+                      lineHeight: 1.65,
+                      color: 'text.primary',
+                      fontWeight: 400,
+                      fontFamily: 'inherit',
+                      wordBreak: 'break-word',
+                      overflowWrap: 'break-word',
+                      overflowX: 'hidden',
+                      maxWidth: '100%',
+                      '& ul': { pl: 2.5, my: 1.25 },
+                      '& li': { mb: 0.75, fontSize: '1rem', lineHeight: 1.65 },
+                      '& p': { margin: '0.5em 0', fontSize: '1rem', lineHeight: 1.65 },
+                      '& a': { color: 'primary.main', textDecoration: 'underline' },
+                      '& strong': { fontWeight: 600 },
+                      // Prevent any HTML content from breaking out horizontally
+                      '& img': { maxWidth: '100%', height: 'auto', display: 'block' },
+                      '& table': { maxWidth: '100%', overflowX: 'auto', display: 'block', borderCollapse: 'collapse' },
+                      '& pre': { maxWidth: '100%', overflowX: 'auto', whiteSpace: 'pre-wrap' },
+                      '& code': { wordBreak: 'break-all' },
+                      '& iframe': { maxWidth: '100%' },
+                    }}
+                    dangerouslySetInnerHTML={{ __html: product.description }}
+                  />
+                </Paper>
+              )}
+
+              {/* User Rating Section */}
+              <Paper
+                elevation={4}
+                sx={{
+                  p: 3,
+                  borderRadius: 3,
+                  bgcolor: 'white',
+                  border: '1px solid rgba(102, 126, 234, 0.1)',
+                }}
+              >
+                <Typography variant="h6" fontWeight={600} gutterBottom sx={{ color: '#1a1a1a' }}>
+                  Rate This Product
+                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                  <Rating
+                    value={userRating}
+                    onChange={(event, newValue) => setUserRating(newValue)}
+                    onChangeActive={(event, newHoverValue) => setHoverRating(newHoverValue)}
+                    precision={1}
+                    sx={{
+                      '& .MuiRating-iconFilled': {
+                        color: 'primary.main',
+                      },
+                      '& .MuiRating-iconHover': {
+                        color: 'primary.main',
                       },
                     }}
                   />
-                  <IconButton
-                    onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
-                    disabled={quantity >= product.stock}
-                    sx={{
-                      border: '2px solid',
-                      borderColor: 'primary.main',
-                      borderRadius: 2,
-                      color: 'primary.main',
+                  <Typography variant="body2" color="text.secondary">
+                    {hoverRating > 0 ? hoverRating : userRating > 0 ? userRating : 'Click to rate'}
+                  </Typography>
+                </Box>
+                <TextField
+                  label="Tell something about this product (optional)"
+                  placeholder="Share your experience..."
+                  multiline
+                  minRows={2}
+                  maxRows={4}
+                  value={reviewText}
+                  onChange={(e) => setReviewText(e.target.value)}
+                  fullWidth
+                  sx={{ mb: 2 }}
+                  variant="outlined"
+                  size="small"
+                />
+                <Button
+                  variant="outlined"
+                  onClick={handleRatingSubmit}
+                  disabled={userRating === 0 || ratingLoading}
+                  sx={{
+                    borderRadius: 2,
+                    textTransform: 'none',
+                    fontWeight: 600,
+                    borderColor: 'primary.main',
+                    color: 'primary.main',
+                    bgcolor: 'transparent',
+                    '&:hover': {
+                      borderColor: 'primary.dark',
                       bgcolor: 'rgba(46, 75, 247, 0.1)',
-                      '&:hover': { 
-                        borderColor: 'primary.dark',
-                        bgcolor: 'rgba(46, 75, 247, 0.2)',
-                      },
-                      '&:disabled': { 
-                        border: '2px solid #e0e0e0',
-                        color: '#999',
-                        bgcolor: 'transparent',
-                      },
-                      transition: 'all 0.3s ease',
-                    }}
-                  >
-                    <Plus size={18} />
-                  </IconButton>
-                </Box>
-              </Box>
-
-              {error && (
-                <Alert severity="error" sx={{ mb: 2 }}>
-                  {error}
-                </Alert>
-              )}
-            </Paper>
-
-            
-            {/* Delivery Info */}
-            <Paper
-              elevation={4}
-              sx={{
-                p: 3,
-                borderRadius: 3,
-                bgcolor: 'white',
-                mb: 3,
-                border: '1px solid rgba(102, 126, 234, 0.1)',
-              }}
-            >
-              <Typography variant="h6" fontWeight={600} gutterBottom sx={{ color: '#1a1a1a' }}>
-                Why Shop With Us?
-              </Typography>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2.5 }}>
-                  <Box sx={{ 
-                    p: 1.5, 
-                    borderRadius: 2, 
-                    bgcolor: 'rgba(46, 75, 247, 0.15)',
-                    color: 'primary.main',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}>
-                    <Truck size={24} />
-                  </Box>
-                  <Box>
-                    <Typography variant="body1" fontWeight={600} sx={{ color: '#1a1a1a' }}>
-                      Free Delivery
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      On orders above $50 • Fast shipping
-                    </Typography>
-                  </Box>
-                </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2.5 }}>
-                  <Box sx={{ 
-                    p: 1.5, 
-                    borderRadius: 2, 
-                    bgcolor: 'rgba(46, 75, 247, 0.15)',
-                    color: 'primary.main',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}>
-                    <Shield size={24} />
-                  </Box>
-                  <Box>
-                    <Typography variant="body1" fontWeight={600} sx={{ color: '#1a1a1a' }}>
-                      100% Secure Payment
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      SSL encrypted • Safe transactions
-                    </Typography>
-                  </Box>
-                </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2.5 }}>
-                  <Box sx={{ 
-                    p: 1.5, 
-                    borderRadius: 2, 
-                    bgcolor: 'rgba(46, 75, 247, 0.15)',
-                    color: 'primary.main',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}>
-                    <RefreshCw size={24} />
-                  </Box>
-                  <Box>
-                    <Typography variant="body1" fontWeight={600} sx={{ color: '#1a1a1a' }}>
-                      30 Days Return
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Easy returns • Full refund
-                    </Typography>
-                  </Box>
-                </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2.5 }}>
-                  <Box sx={{ 
-                    p: 1.5, 
-                    borderRadius: 2, 
-                    bgcolor: 'rgba(46, 75, 247, 0.15)',
-                    color: 'primary.main',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}>
-                    <Star size={24} />
-                  </Box>
-                  <Box>
-                    <Typography variant="body1" fontWeight={600} sx={{ color: '#1a1a1a' }}>
-                      Best Quality
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Premium products • Quality assured
-                    </Typography>
-                  </Box>
-                </Box>
-              </Box>
-            </Paper>
-
-            {/* About this item – product description (after Why Shop With Us?) */}
-            {product.description && (
-              <Paper
-                elevation={0}
-                sx={{
-                  p: 3,
-                  borderRadius: 2,
-                  bgcolor: 'white',
-                  mb: 3,
-                  border: '1px solid',
-                  borderColor: 'divider',
-                }}
-              >
-                <Typography variant="h6" fontWeight={600} gutterBottom sx={{ color: 'text.primary', fontSize: '1.125rem' }}>
-                  About this item
-                </Typography>
-                <Box
-                  sx={{
-                    fontSize: '1rem',
-                    lineHeight: 1.65,
-                    color: 'text.primary',
-                    fontWeight: 400,
-                    fontFamily: 'inherit',
-                    wordBreak: 'break-word',
-                    overflowWrap: 'break-word',
-                    '& ul': { pl: 2.5, my: 1.25 },
-                    '& li': { mb: 0.75, fontSize: '1rem', lineHeight: 1.65 },
-                    '& p': { margin: '0.5em 0', fontSize: '1rem', lineHeight: 1.65 },
-                    '& a': { color: 'primary.main', textDecoration: 'underline' },
-                    '& strong': { fontWeight: 600 },
+                    },
+                    '&:disabled': {
+                      borderColor: '#e0e0e0',
+                      color: '#999',
+                    },
+                    transition: 'all 0.3s ease',
                   }}
-                  dangerouslySetInnerHTML={{ __html: product.description }}
-                />
+                >
+                  {ratingLoading ? 'Submitting…' : 'Submit Rating'}
+                </Button>
               </Paper>
-            )}
-
-            {/* User Rating Section */}
-            <Paper
-              elevation={4}
-              sx={{
-                p: 3,
-                borderRadius: 3,
-                bgcolor: 'white',
-                border: '1px solid rgba(102, 126, 234, 0.1)',
-              }}
-            >
-              <Typography variant="h6" fontWeight={600} gutterBottom sx={{ color: '#1a1a1a' }}>
-                Rate This Product
-              </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                <Rating
-                  value={userRating}
-                  onChange={(event, newValue) => setUserRating(newValue)}
-                  onChangeActive={(event, newHoverValue) => setHoverRating(newHoverValue)}
-                  precision={1}
-                  sx={{
-                    '& .MuiRating-iconFilled': {
-                      color: 'primary.main',
-                    },
-                    '& .MuiRating-iconHover': {
-                      color: 'primary.main',
-                    },
-                  }}
-                />
-                <Typography variant="body2" color="text.secondary">
-                  {hoverRating > 0 ? hoverRating : userRating > 0 ? userRating : 'Click to rate'}
-                </Typography>
-              </Box>
-              <TextField
-                label="Tell something about this product (optional)"
-                placeholder="Share your experience..."
-                multiline
-                minRows={2}
-                maxRows={4}
-                value={reviewText}
-                onChange={(e) => setReviewText(e.target.value)}
-                fullWidth
-                sx={{ mb: 2 }}
-                variant="outlined"
-                size="small"
-              />
-              <Button
-                variant="outlined"
-                onClick={handleRatingSubmit}
-                disabled={userRating === 0 || ratingLoading}
-                sx={{
-                  borderRadius: 2,
-                  textTransform: 'none',
-                  fontWeight: 600,
-                  borderColor: 'primary.main',
-                  color: 'primary.main',
-                  bgcolor: 'transparent',
-                  '&:hover': {
-                    borderColor: 'primary.dark',
-                    bgcolor: 'rgba(46, 75, 247, 0.1)',
-                  },
-                  '&:disabled': {
-                    borderColor: '#e0e0e0',
-                    color: '#999',
-                  },
-                  transition: 'all 0.3s ease',
-                }}
-              >
-                {ratingLoading ? 'Submitting…' : 'Submit Rating'}
-              </Button>
-            </Paper>
             </Box>
           </Grid>
         </Grid>
@@ -948,19 +956,19 @@ const ProductDetail = () => {
             <Typography variant="h4" fontWeight={700} gutterBottom sx={{ color: '#1a1a1a' }}>
               You May Also Like
             </Typography>
-            <Box sx={{ 
-              width: 80, 
-              height: 4, 
-              bgcolor: 'primary.main', 
-              mx: 'auto', 
+            <Box sx={{
+              width: 80,
+              height: 4,
+              bgcolor: 'primary.main',
+              mx: 'auto',
               borderRadius: 2,
-              mb: 2 
+              mb: 2
             }} />
             <Typography variant="body1" color="text.secondary">
               Discover similar products that match your style
             </Typography>
           </Box>
-          
+
           {relatedProducts.length > 0 ? (
             <Box
               sx={{
