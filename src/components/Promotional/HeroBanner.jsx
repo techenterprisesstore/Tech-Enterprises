@@ -6,8 +6,8 @@ import { getBanners } from '../../services/bannerService';
 
 const AUTO_SCROLL_INTERVAL_MS = 5000;
 // Mobile: 1920×1000, desktop: 1920×800
-const BANNER_ASPECT_RATIO = { xs: '1920/1000', sm: '1920/500' };
-const BANNER_MAX_HEIGHT = { xs: 1000, sm: 500 };
+const BANNER_ASPECT_RATIO = { xs: '1920/800', sm: '1920/800' };
+const BANNER_MAX_HEIGHT = { xs: 800, sm: 800 };
 
 const HeroBanner = () => {
   const navigate = useNavigate();
