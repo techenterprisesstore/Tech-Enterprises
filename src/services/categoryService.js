@@ -7,8 +7,8 @@ import {
   deleteDoc,
   serverTimestamp,
 } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { db, storage } from '../config/firebase';
+import { db } from '../config/firebase';
+import { uploadToImageKit } from './imagekitService';
 
 /**
  * Get all categories (public read)
@@ -39,9 +39,7 @@ export const createCategory = async (name, imageFile, imageUrlFromInput) => {
   try {
     let imageUrl = '';
     if (imageFile) {
-      const imageRef = ref(storage, `categories/${Date.now()}_${imageFile.name}`);
-      await uploadBytes(imageRef, imageFile);
-      imageUrl = await getDownloadURL(imageRef);
+      imageUrl = await uploadToImageKit(imageFile, 'categories');
     } else if (imageUrlFromInput && (imageUrlFromInput || '').trim()) {
       imageUrl = (imageUrlFromInput || '').trim();
     }
@@ -67,9 +65,7 @@ export const updateCategory = async (categoryId, data, imageFile, imageUrlFromIn
   try {
     const updateData = { ...data };
     if (imageFile) {
-      const imageRef = ref(storage, `categories/${Date.now()}_${imageFile.name}`);
-      await uploadBytes(imageRef, imageFile);
-      updateData.imageUrl = await getDownloadURL(imageRef);
+      updateData.imageUrl = await uploadToImageKit(imageFile, 'categories');
     } else if (imageUrlFromInput !== undefined) {
       updateData.imageUrl = (imageUrlFromInput || '').trim();
     }

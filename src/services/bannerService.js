@@ -7,8 +7,8 @@ import {
   deleteDoc,
   serverTimestamp,
 } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { db, storage } from '../config/firebase';
+import { db } from '../config/firebase';
+import { uploadToImageKit } from './imagekitService';
 
 /**
  * Get all banners (public read), ordered by order then createdAt
@@ -39,9 +39,7 @@ export const createBanner = async (data, imageFile, imageUrlFromInput) => {
   try {
     let imageUrl = '';
     if (imageFile) {
-      const imageRef = ref(storage, `banners/${Date.now()}_${imageFile.name}`);
-      await uploadBytes(imageRef, imageFile);
-      imageUrl = await getDownloadURL(imageRef);
+      imageUrl = await uploadToImageKit(imageFile, 'banners');
     } else if (imageUrlFromInput && (imageUrlFromInput || '').trim()) {
       imageUrl = (imageUrlFromInput || '').trim();
     }
@@ -70,9 +68,7 @@ export const updateBanner = async (bannerId, data, imageFile, imageUrlFromInput)
   try {
     const updateData = { ...data };
     if (imageFile) {
-      const imageRef = ref(storage, `banners/${Date.now()}_${imageFile.name}`);
-      await uploadBytes(imageRef, imageFile);
-      updateData.imageUrl = await getDownloadURL(imageRef);
+      updateData.imageUrl = await uploadToImageKit(imageFile, 'banners');
     } else if (imageUrlFromInput !== undefined) {
       updateData.imageUrl = (imageUrlFromInput || '').trim();
     }

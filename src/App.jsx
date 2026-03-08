@@ -44,148 +44,148 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <CartProvider>
-        <Router>
+        <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <Routes>
-          {/* Public Routes */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
+            {/* Public Routes */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
 
-          {/* User Routes */}
-          <Route
-            path="/"
-            element={
-              <AppLayout>
-                <Home />
-              </AppLayout>
-            }
-          />
-          <Route
-            path="/products"
-            element={
-              <AppLayout>
-                <ProductList />
-              </AppLayout>
-            }
-          />
-          <Route
-            path="/offers"
-            element={
-              <AppLayout>
-                <Offers />
-              </AppLayout>
-            }
-          />
-          <Route
-            path="/product/:id"
-            element={
-              <AppLayout>
-                <ProductDetail />
-              </AppLayout>
-            }
-          />
-          <Route
-            path="/orders"
-            element={
-              <AppLayout>
-                <OrderHistory />
-              </AppLayout>
-            }
-          />
-          <Route
-            path="/profile"
-            element={
-              <AppLayout>
-                <Profile />
-              </AppLayout>
-            }
-          />
-          <Route
-            path="/cart"
-            element={
-              <AppLayout>
-                <Cart />
-              </AppLayout>
-            }
-          />
-          <Route
-            path="/checkout"
-            element={
-              <AppLayout>
-                <Checkout />
-              </AppLayout>
-            }
-          />
+            {/* User Routes */}
+            <Route
+              path="/"
+              element={
+                <AppLayout>
+                  <Home />
+                </AppLayout>
+              }
+            />
+            <Route
+              path="/products"
+              element={
+                <AppLayout>
+                  <ProductList />
+                </AppLayout>
+              }
+            />
+            <Route
+              path="/offers"
+              element={
+                <AppLayout>
+                  <Offers />
+                </AppLayout>
+              }
+            />
+            <Route
+              path="/product/:id"
+              element={
+                <AppLayout>
+                  <ProductDetail />
+                </AppLayout>
+              }
+            />
+            <Route
+              path="/orders"
+              element={
+                <AppLayout>
+                  <OrderHistory />
+                </AppLayout>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <AppLayout>
+                  <Profile />
+                </AppLayout>
+              }
+            />
+            <Route
+              path="/cart"
+              element={
+                <AppLayout>
+                  <Cart />
+                </AppLayout>
+              }
+            />
+            <Route
+              path="/checkout"
+              element={
+                <AppLayout>
+                  <Checkout />
+                </AppLayout>
+              }
+            />
 
-          {/* Admin Routes */}
-          <Route
-            path="/admin"
-            element={
-              <AdminLayout>
-                <AdminDashboard />
-              </AdminLayout>
-            }
-          />
-          <Route
-            path="/admin/products"
-            element={
-              <AdminLayout>
-                <ProductManagement />
-              </AdminLayout>
-            }
-          />
-          <Route
-            path="/admin/categories"
-            element={
-              <AdminLayout>
-                <CategoryManagement />
-              </AdminLayout>
-            }
-          />
-          <Route
-            path="/admin/banners"
-            element={
-              <AdminLayout>
-                <BannerManagement />
-              </AdminLayout>
-            }
-          />
-          <Route
-            path="/admin/orders"
-            element={
-              <AdminLayout>
-                <OrderManagement />
-              </AdminLayout>
-            }
-          />
-          <Route
-            path="/admin/users"
-            element={
-              <AdminLayout>
-                <UserManagement />
-              </AdminLayout>
-            }
-          />
-          <Route
-            path="/admin/offers"
-            element={
-              <AdminLayout>
-                <OfferManagement />
-              </AdminLayout>
-            }
-          />
-          <Route
-            path="/admin/ratings"
-            element={
-              <AdminLayout>
-                <RatingManagement />
-              </AdminLayout>
-            }
-          />
+            {/* Admin Routes */}
+            <Route
+              path="/admin"
+              element={
+                <AdminLayout>
+                  <AdminDashboard />
+                </AdminLayout>
+              }
+            />
+            <Route
+              path="/admin/products"
+              element={
+                <AdminLayout>
+                  <ProductManagement />
+                </AdminLayout>
+              }
+            />
+            <Route
+              path="/admin/categories"
+              element={
+                <AdminLayout>
+                  <CategoryManagement />
+                </AdminLayout>
+              }
+            />
+            <Route
+              path="/admin/banners"
+              element={
+                <AdminLayout>
+                  <BannerManagement />
+                </AdminLayout>
+              }
+            />
+            <Route
+              path="/admin/orders"
+              element={
+                <AdminLayout>
+                  <OrderManagement />
+                </AdminLayout>
+              }
+            />
+            <Route
+              path="/admin/users"
+              element={
+                <AdminLayout>
+                  <UserManagement />
+                </AdminLayout>
+              }
+            />
+            <Route
+              path="/admin/offers"
+              element={
+                <AdminLayout>
+                  <OfferManagement />
+                </AdminLayout>
+              }
+            />
+            <Route
+              path="/admin/ratings"
+              element={
+                <AdminLayout>
+                  <RatingManagement />
+                </AdminLayout>
+              }
+            />
 
-          {/* Default redirect */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Router>
+            {/* Default redirect */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Router>
       </CartProvider>
     </ThemeProvider>
   );

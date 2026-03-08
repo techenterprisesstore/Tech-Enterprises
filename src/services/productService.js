@@ -13,8 +13,8 @@ import {
   orderBy,
   serverTimestamp
 } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { db, storage } from '../config/firebase';
+import { db } from '../config/firebase';
+import { uploadToImageKit } from './imagekitService';
 
 // Client-side cache for products
 let productsCache = null;
@@ -30,7 +30,7 @@ export const getProducts = async (pageSize = 8, lastDoc = null) => {
     console.error('Firebase db not initialized');
     return { success: false, error: 'Firebase is not configured', products: [] };
   }
-  
+
   try {
     // Clear cache for admin queries or when explicitly requested
     if (pageSize > 8) {
@@ -47,7 +47,7 @@ export const getProducts = async (pageSize = 8, lastDoc = null) => {
 
     // Query products - use the same simple approach as debug component
     console.log('Fetching products from Firestore...', { pageSize, hasLastDoc: !!lastDoc });
-    
+
     let snapshot;
     if (lastDoc) {
       // Pagination query with limit
@@ -217,7 +217,7 @@ export const getProductById = async (productId) => {
   if (!db) {
     return { success: false, error: 'Firebase is not configured' };
   }
-  
+
   try {
     const productDoc = await getDoc(doc(db, 'products', productId));
     if (productDoc.exists()) {
@@ -237,17 +237,13 @@ export const createProduct = async (productData, imageFile, galleryFiles = [], g
     let imageUrl = (productData.imageUrl || '').trim();
 
     if (imageFile) {
-      const imageRef = ref(storage, `products/${Date.now()}_${imageFile.name}`);
-      await uploadBytes(imageRef, imageFile);
-      imageUrl = await getDownloadURL(imageRef);
+      imageUrl = await uploadToImageKit(imageFile, 'products');
     }
 
     const uploadedGallery = [];
     for (const file of galleryFiles) {
       if (!file) continue;
-      const imageRef = ref(storage, `products/${Date.now()}_${file.name}`);
-      await uploadBytes(imageRef, file);
-      const url = await getDownloadURL(imageRef);
+      const url = await uploadToImageKit(file, 'products');
       uploadedGallery.push(url);
     }
 
@@ -284,18 +280,14 @@ export const updateProduct = async (productId, productData, imageFile, galleryFi
 
     let imageUrl = (productData.imageUrl || '').trim();
     if (imageFile) {
-      const imageRef = ref(storage, `products/${Date.now()}_${imageFile.name}`);
-      await uploadBytes(imageRef, imageFile);
-      imageUrl = await getDownloadURL(imageRef);
+      imageUrl = await uploadToImageKit(imageFile, 'products');
       updateData.imageUrl = imageUrl;
     }
 
     const uploadedGallery = [];
     for (const file of galleryFiles) {
       if (!file) continue;
-      const imageRef = ref(storage, `products/${Date.now()}_${file.name}`);
-      await uploadBytes(imageRef, file);
-      const url = await getDownloadURL(imageRef);
+      const url = await uploadToImageKit(file, 'products');
       uploadedGallery.push(url);
     }
 
@@ -330,7 +322,7 @@ export const updateProduct = async (productId, productData, imageFile, galleryFi
 export const deleteProduct = async (productId) => {
   try {
     await deleteDoc(doc(db, 'products', productId));
-    
+
     // Clear cache on delete
     productsCache = null;
     lastFetchTime = null;
@@ -378,7 +370,7 @@ export const getProductCountByCategory = async (category) => {
   if (!db) {
     return 0;
   }
-  
+
   try {
     const q = query(
       collection(db, 'products'),
@@ -399,18 +391,18 @@ export const getCategoryCounts = async () => {
   if (!db) {
     return {};
   }
-  
+
   try {
     const snapshot = await getDocs(collection(db, 'products'));
     const counts = {};
-    
+
     snapshot.forEach((doc) => {
       const category = doc.data().category;
       if (category) {
         counts[category] = (counts[category] || 0) + 1;
       }
     });
-    
+
     return counts;
   } catch (error) {
     console.error('Error getting category counts:', error);
