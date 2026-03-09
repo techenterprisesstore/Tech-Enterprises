@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Container, Typography, Grid, Box, Paper, Chip } from '@mui/material';
-import { Tag } from 'lucide-react';
+import { Tag, CheckCircle } from 'lucide-react';
 import ShopcartProductCard from '../../components/Product/ShopcartProductCard';
 import ProductSkeleton from '../../components/Product/ProductSkeleton';
 import { getOfferProducts } from '../../services/productService';
-import { getOffersForUser } from '../../services/offerService';
+import { getOffersForUser, getUserUsageForOffers } from '../../services/offerService';
 import { useAuth } from '../../hooks/useAuth';
 import { formatCurrency } from '../../utils/format';
 
@@ -12,6 +12,7 @@ const Offers = () => {
   const { user } = useAuth();
   const [products, setProducts] = useState([]);
   const [coupons, setCoupons] = useState([]);
+  const [usageMap, setUsageMap] = useState({}); // { [offerId]: usedCount }
   const [loading, setLoading] = useState(true);
   const [couponsLoading, setCouponsLoading] = useState(true);
 
@@ -24,6 +25,7 @@ const Offers = () => {
       loadCoupons();
     } else {
       setCoupons([]);
+      setUsageMap({});
       setCouponsLoading(false);
     }
   }, [user?.uid]);
@@ -38,13 +40,26 @@ const Offers = () => {
   const loadCoupons = async () => {
     setCouponsLoading(true);
     const result = await getOffersForUser(user.uid);
-    if (result.success) setCoupons(result.offers);
+    if (result.success) {
+      const offers = result.offers;
+      setCoupons(offers);
+      // Fetch this user's usage counts for all loaded offers
+      const map = await getUserUsageForOffers(offers.map(o => o.id), user.uid);
+      setUsageMap(map);
+    }
     setCouponsLoading(false);
   };
 
   const discountLabel = (o) => {
     if (o.discountType === 'percent') return `${o.discountValue}% off`;
     return `${formatCurrency(Number(o.discountValue))} off`;
+  };
+
+  const isUsedUp = (c) => {
+    const limit = Number(c.usageLimitPerUser) || 0;
+    if (limit === 0) return false; // unlimited — never "used up"
+    const used = usageMap[c.id] || 0;
+    return used >= limit;
   };
 
   return (
@@ -57,7 +72,7 @@ const Offers = () => {
           Special offers
         </Typography>
 
-        {/* Your coupons - only for logged-in users; shows offers targeted to them */}
+        {/* Your coupons */}
         {user && (
           <Box sx={{ mb: 4 }}>
             <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 2 }}>Your coupons</Typography>
@@ -78,38 +93,91 @@ const Offers = () => {
               </Paper>
             ) : (
               <Grid container spacing={2}>
-                {coupons.map((c) => (
-                  <Grid item xs={12} sm={6} md={4} key={c.id}>
-                    <Paper
-                      elevation={0}
-                      sx={{
-                        p: 2,
-                        borderRadius: 2,
-                        border: '1px solid',
-                        borderColor: 'divider',
-                        bgcolor: '#fff',
-                        height: '100%',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'space-between',
-                      }}
-                    >
-                      <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
-                        <Box sx={{ width: 44, height: 44, borderRadius: 2, bgcolor: 'primary.main', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <Tag size={22} style={{ color: 'white' }} />
+                {coupons.map((c) => {
+                  const used = isUsedUp(c);
+                  return (
+                    <Grid item xs={12} sm={6} md={4} key={c.id}>
+                      <Paper
+                        elevation={0}
+                        sx={{
+                          p: 2,
+                          borderRadius: 2,
+                          border: '1px solid',
+                          borderColor: used ? '#e2e8f0' : 'divider',
+                          bgcolor: used ? '#f8fafc' : '#fff',
+                          height: '100%',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'space-between',
+                          position: 'relative',
+                          overflow: 'hidden',
+                          opacity: used ? 0.75 : 1,
+                        }}
+                      >
+                        {/* Used ribbon */}
+                        {used && (
+                          <Box sx={{
+                            position: 'absolute', top: 10, right: -22,
+                            bgcolor: '#22c55e', color: '#fff',
+                            fontSize: '0.65rem', fontWeight: 700,
+                            px: 3.5, py: 0.3,
+                            transform: 'rotate(35deg)',
+                            letterSpacing: '0.06em',
+                            boxShadow: '0 1px 4px rgba(0,0,0,0.15)',
+                          }}>
+                            USED
+                          </Box>
+                        )}
+
+                        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
+                          <Box sx={{
+                            width: 44, height: 44, borderRadius: 2,
+                            bgcolor: used ? '#94a3b8' : 'primary.main',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            flexShrink: 0,
+                          }}>
+                            {used
+                              ? <CheckCircle size={22} style={{ color: 'white' }} />
+                              : <Tag size={22} style={{ color: 'white' }} />
+                            }
+                          </Box>
+                          <Box>
+                            <Typography variant="subtitle1" fontWeight={600} sx={{ color: used ? '#64748b' : 'text.primary' }}>
+                              {c.name || c.code}
+                            </Typography>
+                            <Chip
+                              label={discountLabel(c)}
+                              size="small"
+                              color={used ? 'default' : 'primary'}
+                              sx={{ mt: 0.5 }}
+                            />
+                          </Box>
                         </Box>
-                        <Box>
-                          <Typography variant="subtitle1" fontWeight={600}>{c.name || c.code}</Typography>
-                          <Chip label={discountLabel(c)} size="small" color="primary" sx={{ mt: 0.5 }} />
+
+                        <Box sx={{
+                          mt: 2, p: 1.5, borderRadius: 1,
+                          bgcolor: used ? '#f1f5f9' : '#f8fafc',
+                        }}>
+                          {used ? (
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                              <CheckCircle size={14} style={{ color: '#22c55e' }} />
+                              <Typography variant="caption" sx={{ color: '#16a34a', fontWeight: 600 }}>
+                                Already used
+                              </Typography>
+                            </Box>
+                          ) : (
+                            <>
+                              <Typography variant="caption" color="text.secondary">Use at checkout</Typography>
+                              <Typography variant="body2" fontWeight={700} sx={{ fontFamily: 'monospace', letterSpacing: '0.1em' }}>
+                                {c.code}
+                              </Typography>
+                            </>
+                          )}
                         </Box>
-                      </Box>
-                      <Box sx={{ mt: 2, p: 1.5, bgcolor: '#f8fafc', borderRadius: 1 }}>
-                        <Typography variant="caption" color="text.secondary">Use at checkout</Typography>
-                        <Typography variant="body2" fontWeight={700} sx={{ fontFamily: 'monospace', letterSpacing: '0.1em' }}>{c.code}</Typography>
-                      </Box>
-                    </Paper>
-                  </Grid>
-                ))}
+                      </Paper>
+                    </Grid>
+                  );
+                })}
               </Grid>
             )}
           </Box>

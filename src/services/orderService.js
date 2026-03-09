@@ -22,7 +22,7 @@ const WHATSAPP_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER || '1234567890';
 export const createOrder = async (orderData) => {
   try {
     console.log('Creating order with data:', orderData);
-    
+
     // Create order document with all details
     const docRef = await addDoc(collection(db, 'orders'), {
       ...orderData,
@@ -30,7 +30,7 @@ export const createOrder = async (orderData) => {
       status: 'pending'
     });
     const orderId = docRef.id;
-    
+
     console.log('Order created with ID:', orderId);
 
     // Generate WhatsApp message
@@ -77,7 +77,7 @@ export const createOrderLegacy = async (userId, items, totalAmount) => {
 export const getUserOrders = async (userId) => {
   try {
     console.log('Fetching orders for user:', userId);
-    
+
     // First try without ordering to avoid index requirement
     const q = query(
       collection(db, 'orders'),
@@ -107,7 +107,7 @@ export const getUserOrders = async (userId) => {
 export const getAllOrders = async () => {
   try {
     console.log('Fetching all orders...');
-    
+
     // First try without ordering to avoid index requirement
     const q = query(
       collection(db, 'orders'),
@@ -179,17 +179,17 @@ const generateWhatsAppMessage = (orderId, orderData) => {
   let message = `🛒 *NEW ORDER* 🛒\n\n`;
   message += `*Order ID:* ${orderId}\n`;
   message += `*Date:* ${new Date(orderData.createdAt).toLocaleDateString()}\n\n`;
-  
+
   message += `👤 *Customer Information*\n`;
   message += `Name: ${orderData.userName}\n`;
   message += `Email: ${orderData.userEmail}\n`;
   message += `Phone: ${orderData.userPhone}\n\n`;
-  
+
   message += `� *Shipping Address*\n`;
   message += `${orderData.shippingAddress.name}\n`;
   message += `${orderData.shippingAddress.street}, ${orderData.shippingAddress.landmark || ''}\n`;
   message += `${orderData.shippingAddress.city}, ${orderData.shippingAddress.state} - ${orderData.shippingAddress.pincode}\n\n`;
-  
+
   message += `📦 *Order Details*\n`;
   message += `Total Items: ${orderData.totalItems || 0}\n\n`;
 

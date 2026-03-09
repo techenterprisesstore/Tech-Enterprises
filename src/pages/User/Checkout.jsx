@@ -32,12 +32,12 @@ import { useAuth } from '../../hooks/useAuth';
 import { formatCurrency } from '../../utils/format';
 import { createOrder } from '../../services/orderService';
 import { saveAddress, getUserAddresses, deleteAddress, updateAddress } from '../../services/addressService';
-import { validateCouponForUser } from '../../services/offerService';
+import { validateCouponForUser, recordOfferUsage } from '../../services/offerService';
 
 const Checkout = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, loading: authLoading } = useAuth();
+  const { user, profile, loading: authLoading } = useAuth();
   const { items, totalItems, totalPrice, clearCart, loading: cartLoading } = useCart();
 
   const [loading, setLoading] = useState(false);
@@ -404,6 +404,16 @@ const Checkout = () => {
 
       if (result.success) {
         setOrderId(result.orderId);
+
+        // Record coupon usage for per-user limit tracking
+        if (appliedOffer?.id) {
+          await recordOfferUsage(
+            appliedOffer.id,
+            user.uid,
+            profile?.name || user.displayName || user.email || '',
+            user.email || ''
+          );
+        }
 
         // Open WhatsApp with order details
         window.open(result.whatsappUrl, '_blank');
