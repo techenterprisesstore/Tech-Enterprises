@@ -1,6 +1,7 @@
 import { Box, Container, Typography, Link, IconButton, Divider } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import HeroIcon from '../Common/HeroIcon';
+import { MapPin, ShieldCheck } from 'lucide-react';
 
 const footerLinks = {
   Shop: [
@@ -128,8 +129,14 @@ const DesktopFooter = ({ navigate }) => (
           </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
             <HeroIcon name="phoneCall" size={14} sx={{ color: 'primary.light' }} />
-            <Typography component="a" href="tel:+001234567890" variant="body2" sx={{ color: 'inherit', textDecoration: 'none' }}>
-              +00 123 456 7890
+            <Typography variant="body2" sx={{ color: 'inherit', textDecoration: 'none' }}>
+              +91 9140871592
+            </Typography>
+          </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <MapPin size={14} />
+            <Typography variant="body2" sx={{ color: 'inherit', textDecoration: 'none' }}>
+              63E/9 Dabauli Kanpur
             </Typography>
           </Box>
         </Box>
@@ -174,9 +181,9 @@ const DesktopFooter = ({ navigate }) => (
         <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)' }}>
           © {new Date().getFullYear()} Tech Enterprises. All rights reserved.
         </Typography>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <IconButton size="small" href="tel:+001234567890" sx={{ color: 'rgba(255,255,255,0.7)', '&:hover': { color: 'primary.light' } }} aria-label="Call">
-            <HeroIcon name="phoneCall" size={18} />
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0 }}>
+          <IconButton size="small" sx={{ color: 'rgba(0, 255, 119, 0.7)' }}>
+            <ShieldCheck size={18} />
           </IconButton>
           <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)' }}>
             Secure payments · Fast delivery
